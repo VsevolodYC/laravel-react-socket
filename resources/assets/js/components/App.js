@@ -7,7 +7,7 @@ export default class App extends Component {
         return (
             <div className="container">
                 <div className="row">
-                    <div className="col-md-8 col-md-offset-2">
+                    <div className="col-md-8">
                         <div className="panel panel-default">
                             <div className="panel-heading">Simple test task</div>
                             <div className="panel-body">
