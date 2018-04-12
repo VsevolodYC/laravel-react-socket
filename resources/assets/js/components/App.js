@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
+import Home from "./Home";
 
 export default class App extends Component {
     render() {
@@ -10,7 +11,7 @@ export default class App extends Component {
                         <div className="panel panel-default">
                             <div className="panel-heading">Simple test task</div>
                             <div className="panel-body">
-                                Test
+                                <Home/>
                             </div>
                         </div>
                     </div>
