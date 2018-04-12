@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Notification;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 
 class WebSocketController extends Controller implements MessageComponentInterface
 {
-    private $connections = [];
-
     protected $clients;
+
+    const SEND_NOTIFICATION = "SEND_NOTIFICATION";
+    const GET_NOTIFICATION = "GET_NOTIFICATION";
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
@@ -22,18 +24,7 @@ class WebSocketController extends Controller implements MessageComponentInterfac
      */
     function onOpen(ConnectionInterface $conn)
     {
-//        $this->connections[$conn->resourceId] = compact('conn') + ['user_id' => null];
         $this->clients->attach($conn);
-
-        foreach ($this->clients as $client) {
-            $msg = [
-                'eventType' => 'ee',
-                'data' => [
-                    $conn->resourceId,
-                ],
-            ];
-            $client->send(json_encode($msg));
-        }
     }
 
     /**
@@ -43,14 +34,8 @@ class WebSocketController extends Controller implements MessageComponentInterfac
      */
     function onClose(ConnectionInterface $conn)
     {
-        $disconnectedId = $conn->resourceId;
-        unset($this->connections[$disconnectedId]);
-        foreach ($this->connections as &$connection)
-            $connection['conn']->send(json_encode([
-                'offline_user' => $disconnectedId,
-                'from_user_id' => 'server control',
-                'from_resource_id' => null
-            ]));
+        $this->clients->detach($conn);
+        echo "Connection {$conn->resourceId} has disconnected\n";
     }
 
     /**
@@ -62,9 +47,8 @@ class WebSocketController extends Controller implements MessageComponentInterfac
      */
     function onError(ConnectionInterface $conn, \Exception $e)
     {
-        $userId = $this->connections[$conn->resourceId]['user_id'];
-        echo "An error has occurred with user $userId: {$e->getMessage()}\n";
-        unset($this->connections[$conn->resourceId]);
+        echo "An error has occurred with user ".$conn->resourceId;
+        $this->clients->detach($conn);
         $conn->close();
     }
 
@@ -76,23 +60,40 @@ class WebSocketController extends Controller implements MessageComponentInterfac
      */
     function onMessage(ConnectionInterface $conn, $msg)
     {
-        if (is_null($this->connections[$conn->resourceId]['user_id'])) {
-            $this->connections[$conn->resourceId]['user_id'] = $msg;
-            $onlineUsers = [];
-            foreach ($this->connections as $resourceId => &$connection) {
-                $connection['conn']->send(json_encode([$conn->resourceId => $msg]));
-                if ($conn->resourceId != $resourceId)
-                    $onlineUsers[$resourceId] = $connection['user_id'];
-            }
-            $conn->send(json_encode(['online_users' => $onlineUsers]));
-        } else {
-            $fromUserId = $this->connections[$conn->resourceId]['user_id'];
-            $msg = json_decode($msg, true);
-            $this->connections[$msg['to']]['conn']->send(json_encode([
-                'msg' => $msg['content'],
-                'from_user_id' => $fromUserId,
-                'from_resource_id' => $conn->resourceId
-            ]));
+        $message = json_decode($msg);
+        $data = $message->data;
+        echo 'message';
+        var_dump($message);
+        echo 'data';
+        var_dump($data);
+        echo 'data->message';
+        var_dump($data->message);
+
+        $request = ['eventType' => ''];
+        switch ($message->eventType){
+            case WebSocketController::SEND_NOTIFICATION:
+                $notification = null;
+                try {
+                    $notification = Notification::create([
+                        'message' => $data->message,
+                    ]);
+                } catch (\Exception $exception){
+                    echo "Cannot create Notification:\n".$exception.$message;
+                }
+
+                if ($notification){
+                    foreach ($this->clients as $client) {
+                        $msg = [
+                            'eventType' => WebSocketController::GET_NOTIFICATION,
+                            'data' => [
+                                $notification
+                            ],
+                        ];
+                        $client->send(json_encode($msg));
+                    }
+                }
+
+                break;
         }
     }
 }
