@@ -1,19 +1,21 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 
 import SocketService from '../services/socket_service';
+import actions from './../actions/index';
 
 import Message from './message';
 
+@connect(state => ({
+  messages: state.homeReducer.messages
+}))
 export default class Home extends Component {
 
   socket = null;
 
   // receive new message
   onMessage = (msg) => {
-    // TODO migrate to redux
-    this.setState({
-      messages: [...this.state.messages, ...msg.data]
-    });
+    this.props.dispatch(actions.homeAction.receiveMessage(msg.data));
   };
 
   socketEvents = [
@@ -23,12 +25,12 @@ export default class Home extends Component {
   constructor (props) {
     super(props);
 
-    this.socket = SocketService.getConnection();
-
     this.state = {
       writeMessage: '',
       messages: [],
-    }
+    };
+
+    this.socket = SocketService.getConnection();
   }
 
   subscribeToSoketEvents = () => {
@@ -81,7 +83,7 @@ export default class Home extends Component {
         <div className='row'>
           <div className='col-12 col-md-8 offset-md-2'>
             {
-              this.state.messages.map((message, number) => <Message key={ `Message_id_${number}` } message={ message }/>)
+              this.props.messages && this.props.messages.map((message, number) => <Message key={ `Message_id_${number}` } message={ message }/>)
             }
           </div>
         </div>
