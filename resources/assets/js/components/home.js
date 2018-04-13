@@ -33,22 +33,22 @@ export default class Home extends Component {
     this.socket = SocketService.getConnection();
   }
 
-  subscribeToSoketEvents = () => {
+  subscribeToSocketEvents = () => {
     this.socketEvents.map(event => SocketService.subscribe(event));
   };
 
-  unsubscribeFromSoketEvents = () => {
+  unsubscribeFromSocketEvents = () => {
     this.socketEvents.map(event => SocketService.unsubscribe(event));
   };
 
   // on component activate/create RectLifeCycleEvent
   componentDidMount() {
-    this.subscribeToSoketEvents();
+    this.subscribeToSocketEvents();
   }
 
   // on component unActivate/delete RectLifeCycleEvent
   componentWillUnmount () {
-    this.unsubscribeFromSoketEvents();
+    this.unsubscribeFromSocketEvents();
   }
 
   sendMessage = (e) => {
