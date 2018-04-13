@@ -8,7 +8,9 @@ export default class Home extends Component {
 
   socket = null;
 
+  // receive new message
   onMessage = (msg) => {
+    // TODO migrate to redux
     this.setState({
       messages: [...this.state.messages, ...msg.data]
     });
@@ -22,9 +24,6 @@ export default class Home extends Component {
     super(props);
 
     this.socket = SocketService.getConnection();
-
-    this.subscribeToSoketEvents();
-    // SocketService.subscribe(SocketService.events.GET_NOTIFICATION, this.onMessage);
 
     this.state = {
       writeMessage: '',
@@ -40,9 +39,14 @@ export default class Home extends Component {
     this.socketEvents.map(event => SocketService.unsubscribe(event));
   };
 
+  // on component activate/create RectLifeCycleEvent
+  componentDidMount() {
+    this.subscribeToSoketEvents();
+  }
+
+  // on component unActivate/delete RectLifeCycleEvent
   componentWillUnmount () {
     this.unsubscribeFromSoketEvents();
-    // SocketService.unsubscribe(SocketService.events.GET_NOTIFICATION, this.onMessage);
   }
 
   sendMessage = (e) => {
@@ -58,6 +62,7 @@ export default class Home extends Component {
     this.setState({ writeMessage: '' });
   };
 
+  // watcher for new message text
   onMessageChange = ( { target: { value } }) => {
     this.setState({ writeMessage: value });
   };

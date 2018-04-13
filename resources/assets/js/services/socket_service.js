@@ -1,12 +1,23 @@
 export default class SocketService {
 
+  // webSocket instance
   static socket = null;
+
+  // webSocket message events
+  static events = {
+    GET_NOTIFICATION: 'GET_NOTIFICATION',
+    SEND_NOTIFICATION: 'SEND_NOTIFICATION',
+  };
+
+  // external subscriptions to message events
   static subscriptions = [];
 
+  // helper for add new subscription events;
   static setSubscriptionsSocket = function (name) {
     if ( !SocketService.subscriptions[name] ) SocketService.subscriptions[name] = [];
   };
 
+  // return connected WebSocket
   static getConnection = function () {
     if (SocketService.socket) {
       return SocketService.socket;
@@ -25,6 +36,7 @@ export default class SocketService {
     return SocketService.socket;
   };
 
+  // add external subscriptions to message events
   static subscribe = function ({ eventName, callback }) {
     SocketService.setSubscriptionsSocket(eventName);
 
@@ -36,6 +48,7 @@ export default class SocketService {
     return { eventName, callback: callback_in };
   };
 
+  // delete external subscriptions to message events
   static unsubscribe = function ({ eventName, callback }) {
     SocketService.setSubscriptionsSocket(eventName);
 
@@ -44,11 +57,9 @@ export default class SocketService {
       SocketService.subscriptions[eventName].pop(callback);
       callback_in = callback;
     }
+
+    if ( SocketService.subscriptions[eventName] ) delete SocketService.subscriptions[eventName];
+
     return { eventName, callback: callback_in };
   };
-
-  static events = {
-      GET_NOTIFICATION: 'GET_NOTIFICATION',
-      SEND_NOTIFICATION: 'SEND_NOTIFICATION',
-  }
 }
