@@ -25,6 +25,7 @@ class WebSocketController extends Controller implements MessageComponentInterfac
     function onOpen(ConnectionInterface $conn)
     {
         $this->clients->attach($conn);
+        echo "Connection {$conn->resourceId} has opened\n";
     }
 
     /**
@@ -62,12 +63,6 @@ class WebSocketController extends Controller implements MessageComponentInterfac
     {
         $message = json_decode($msg);
         $data = $message->data;
-        echo 'message';
-        var_dump($message);
-        echo 'data';
-        var_dump($data);
-        echo 'data->message';
-        var_dump($data->message);
 
         $request = ['eventType' => ''];
         switch ($message->eventType){
